@@ -1,3 +1,18 @@
 {
-  "apps": []
+  "apps": [
+    {
+      "name": "Pet Heart Rate and Breath Tracker",
+      "repo": "AllAboutEEOrg/PetHealthTrackerApp",
+      "local_path": "/Users/miguel_macmini/PetHealthTrackerApp",
+      "project_path": "iPhoneApp/Pet Heart Rate and Breath Tracker/Pet Heart Rate and Breath Tracker.xcodeproj",
+      "scheme": "Pet Heart Rate and Breath Tracker",
+      "bundle_id": "com.allabouteeorg.Pet-Heart-Rate-and-Breath-Tracker",
+      "team_id": "",
+      "last_build_status": "",
+      "last_deployed_version": "",
+      "last_deployed_build": "",
+      "added_at": "2026-05-28",
+      "notes": "SwiftUI app. Feature files in Feature Files/ directory."
+    }
+  ]
 }
