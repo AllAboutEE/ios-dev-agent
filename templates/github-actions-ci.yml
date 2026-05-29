@@ -1,0 +1,106 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Resolve packages
+        run: xcodebuild -resolvePackageDependencies -scheme "$SCHEME" -project "$PROJECT"
+        env:
+          SCHEME: ${{ vars.XCODE_SCHEME }}
+          PROJECT: ${{ vars.XCODE_PROJECT }}
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -scheme "$SCHEME" \
+            -project "$PROJECT" \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO
+        env:
+          SCHEME: ${{ vars.XCODE_SCHEME }}
+          PROJECT: ${{ vars.XCODE_PROJECT }}
+
+      - name: Test
+        run: |
+          xcodebuild test \
+            -scheme "$SCHEME" \
+            -project "$PROJECT" \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO
+        env:
+          SCHEME: ${{ vars.XCODE_SCHEME }}
+          PROJECT: ${{ vars.XCODE_PROJECT }}
+
+  deploy-testflight:
+    needs: build-and-test
+    runs-on: macos-15
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Install App Store Connect API Key
+        run: |
+          mkdir -p ~/private_keys
+          echo "$ASC_KEY" > ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
+        env:
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+
+      - name: Archive
+        run: |
+          xcodebuild archive \
+            -scheme "$SCHEME" \
+            -project "$PROJECT" \
+            -archivePath build/archive.xcarchive \
+            -destination 'generic/platform=iOS' \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${ASC_KEY_ID}.p8 \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+        env:
+          SCHEME: ${{ vars.XCODE_SCHEME }}
+          PROJECT: ${{ vars.XCODE_PROJECT }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/archive.xcarchive \
+            -exportPath build/export \
+            -exportOptionsPlist templates/ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${ASC_KEY_ID}.p8 \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+
+      - name: Upload to TestFlight
+        run: |
+          xcrun altool --upload-app \
+            -f build/export/*.ipa \
+            -t ios \
+            --apiKey "$ASC_KEY_ID" \
+            --apiIssuer "$ASC_ISSUER_ID"
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
