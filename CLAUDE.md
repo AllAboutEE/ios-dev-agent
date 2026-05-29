@@ -21,15 +21,20 @@ Open Claude Code inside this repo, then tell it which app to work on:
 
 The agent auto-discovers the Xcode project, scheme, and targets in whatever repo you point it at.
 
-## Using with multiple apps
+## App Registry
 
-You run Claude Code from this repo. The agent clones or navigates to your app repo, discovers the Xcode project structure, and operates on it. Your app repos stay clean — no agent files needed in them.
+The agent tracks all apps in `apps.json`. When you add a new app, it auto-discovers the Xcode project, scheme, and bundle ID, then saves them so future sessions don't need to rediscover.
 
 ```bash
 cd ~/ios-dev-agent
 claude
-# Then: "Clone my-org/my-app and build it for the simulator"
+# "Add AllAboutEEOrg/PetHealthTrackerApp"
+# "List my apps"
+# "Build Pet Health Tracker"
+# "What's the status of all my apps?"
 ```
+
+After builds and deployments, it updates the registry with the latest status, version, and build number.
 
 ## Requirements
 
