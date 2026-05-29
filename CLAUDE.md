@@ -1,6 +1,6 @@
 # iOS Dev Agent
 
-This repo contains a Claude Code skill for building, testing, and deploying iOS apps to the App Store.
+A standalone Claude Code agent for building, testing, and deploying iOS apps to the App Store. Works with any iOS app repo — just point it at your project.
 
 ## Structure
 
@@ -11,13 +11,25 @@ This repo contains a Claude Code skill for building, testing, and deploying iOS 
 
 ## Usage
 
-After setup, invoke the skill in Claude Code by describing what you want:
+Open Claude Code inside this repo, then tell it which app to work on:
 
-- "Build my app for the simulator"
-- "Run all tests"
+- "Clone AllAboutEEOrg/PetHealthTrackerApp and build it"
+- "Open ~/MyApp and run all tests"
 - "Deploy the current build to TestFlight"
 - "Submit version 2.1 to App Review with these release notes"
 - "Create a PR for this feature branch"
+
+The agent auto-discovers the Xcode project, scheme, and targets in whatever repo you point it at.
+
+## Using with multiple apps
+
+You run Claude Code from this repo. The agent clones or navigates to your app repo, discovers the Xcode project structure, and operates on it. Your app repos stay clean — no agent files needed in them.
+
+```bash
+cd ~/ios-dev-agent
+claude
+# Then: "Clone my-org/my-app and build it for the simulator"
+```
 
 ## Requirements
 
